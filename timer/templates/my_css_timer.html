@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+</head>
+
+<body>
+<div class="container">
+    <div class="timer-contianer">
+        <div class="timer well well-lg text-center hidden" style="margin-top:30px">
+            <div class="header">
+                <button class="close" type="button" name="remove">&times;</button>
+                <h2><input class="text-center" type="text" name="title" placeholder="TITLE" style="background-color:#f5f5f5; border:0px;" /></h2>
+                <hr>
+            </div>
+
+            <h1 class="showtime">
+                <input class="text-right" type="number" name="hours" min="0" max="59" value="00" />:
+                <input class="text-right" type="number" name="minutes" min="0" max="59" value="00" />:
+                <input class="text-right" type="number" name="seconds" min="0" max="59" value="00" />
+            </h1>
+
+            <div class="control" style="margin-top:30px">
+                <input class="btn btn-default btn-lg" type="button" name="start" value="START" style="margin-right:20px" />
+                <input class="btn btn-default btn-lg" type="button" name="reset" value="RESET" />
+            </div>
+        </div>
+
+        <div class="timer well well-lg text-center" style="margin-top:30px">
+            <div class="header">
+                <button class="close" type="button" name="remove">&times;</button>
+                <h2><input class="text-center" type="text" name="title" placeholder="TITLE" style="background-color:#f5f5f5; border:0px;" /></h2>
+                <hr>
+            </div>
+
+            <h1 class="showtime">
+                <input class="text-right" type="number" name="hours" min="0" max="59" value="00" />:
+                <input class="text-right" type="number" name="minutes" min="0" max="59" value="00" />:
+                <input class="text-right" type="number" name="seconds" min="0" max="59" value="00" />
+            </h1>
+
+            <div class="control" style="margin-top:30px">
+                <input class="btn btn-default btn-lg" type="button" name="start" value="START" style="margin-right:20px" />
+                <input class="btn btn-default btn-lg" type="button" name="reset" value="RESET" />
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-default btn-link well well-lg text-center" type="button" name="add" style="margin-top:30px; font-size:40px; width:100%;">&plus;</button>
+</div>
+
+</body>
+</html>
+
+<script>
+function padding(number){ return ('0' + number).substr(-2); }
+
+function Timer(timer) {
+    var seconds = $(timer).find("input[name='seconds']");
+    var minutes = $(timer).find("input[name='minutes']");
+    var hours = $(timer).find("input[name='hours']");
+    var start_btn = timer.find("input[name='start']");
+    var reset_btn = timer.find("input[name='reset']");
+
+    var initial_seconds = padding( seconds.val() );
+    var initial_minutes = padding( minutes.val() );
+    var initial_hours = padding( hours.val() );
+    var time_running;
+
+    var time = function() {
+            time_running = setInterval(function() {
+            if (seconds.val() == 00 && minutes.val() == 00 && hours.val() == 00) {
+                clearInterval(time_running);
+                start_btn.val('START');
+                seconds.removeAttr('readonly');
+                minutes.removeAttr('readonly');
+                hours.removeAttr('readonly');
+                return;
+            }
+            if (seconds.val() == 00) {
+                seconds.val(59);
+                if (minutes.val() == 00) {
+                    minutes.val(59);
+                    if (hours.val() !=  00)
+                        hours.val(hours.val()-1);
+                }
+                else {
+                    minutes.val(minutes.val()-1);
+                }
+            }
+            else {
+                seconds.val(seconds.val()-1);
+            }
+
+            seconds.val( padding(seconds.val()) );
+            minutes.val( padding(minutes.val()) );
+            hours.val( padding(hours.val()) );
+
+        }, 1000);
+    };
+
+    this.start = function(timer) {
+        if (start_btn.val() == "START") {
+
+            if ( seconds.val() < 0 || minutes.val() < 0 || hours.val() < 0 ||
+                 seconds.val() > 59 || minutes.val() > 59 || hours.val() > 59 ) {
+                alert("Value must be from 0 to 59");
+                return;
+            }
+
+            time();
+            start_btn.val("PAUSE");
+
+            initial_seconds = padding( seconds.val() );
+            initial_minutes = padding( minutes.val() );
+            initial_hours = padding( hours.val() );
+
+            seconds.attr('readonly', 'readonly');
+            minutes.attr('readonly', 'readonly');
+            hours.attr('readonly', 'readonly');
+        }
+        else if (start_btn.val() == "PAUSE") {
+            clearInterval(time_running);
+            start_btn.val("CONTINUE");
+        }
+        else {
+            time();
+            start_btn.val("PAUSE");
+
+            seconds.attr('readonly', 'readonly');
+            minutes.attr('readonly', 'readonly');
+            hours.attr('readonly', 'readonly');
+        }
+    };
+
+    this.reset = function(timer) {
+        clearInterval(time_running);
+        start_btn.val('START');
+
+        seconds.val(initial_seconds);
+        minutes.val(initial_minutes);
+        hours.val(initial_hours);
+
+        seconds.removeAttr('readonly');
+        minutes.removeAttr('readonly');
+        hours.removeAttr('readonly');
+    };
+};
+
+var timer_second  = $('.timer:nth-child(2)');
+var time_creator2 = new Timer( timer_second );
+timer_second.data('time_creator', time_creator2);
+
+
+$(document).on("click", "button[name='add']", function() {
+    $('.timer:first').clone().appendTo( $(this).siblings() );
+    $('.timer:last').removeClass('hidden');
+    var timer = $('.timer:last');
+    time_creator = new Timer(timer);
+    timer.data('time_creator', time_creator);
+});
+
+
+$(document).on("click", "button[name='remove']", function() {
+    console.log($(this).parents('.timer'));
+    $(this).parents('.timer').remove();
+});
+
+$(document).on("click", "input[name='start']", function() {
+    var timer = $(this).parents('.timer');
+    var time_creator = timer.data('time_creator');
+    time_creator.start(timer);
+});
+
+
+$(document).on("click", "input[name='reset']", function() {
+    var timer = $(this).parents('.timer');
+    var time_creator = timer.data('time_creator');
+    time_creator.reset(timer);
+});
+
+
+</script>
